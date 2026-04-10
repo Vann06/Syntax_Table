@@ -1,0 +1,5 @@
+Expr -> Term ExprTail
+ExprTail -> + Term ExprTail | ε
+Term -> Factor TermTail
+TermTail -> * Factor TermTail | ε
+Factor -> ( Expr ) | id
