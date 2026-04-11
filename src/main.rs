@@ -2,13 +2,33 @@ mod grammar;
 mod first_follow;
 
 use std::fs;
+use std::io::{self, Write};
 
 use grammar::Grammar;
 use first_follow::{compute_first_sets, compute_follow_sets};
 
 fn main() {
-    let input = fs::read_to_string("./ejemplos/ej1.txt")
-        .expect("No se pudo leer el archivo");
+    let default_path = "./ejemplos/ej1.txt";
+
+    println!("Ingresa la ruta del archivo .txt a leer (Enter para usar {}):", default_path);
+    print!("> ");
+    io::stdout().flush().expect("No se pudo escribir en stdout");
+
+    let mut path_input = String::new();
+    io::stdin()
+        .read_line(&mut path_input)
+        .expect("No se pudo leer la entrada");
+
+    let chosen_path = path_input.trim();
+    let path = if chosen_path.is_empty() {
+        default_path
+    } else {
+        chosen_path
+    };
+
+    let input = fs::read_to_string(path).unwrap_or_else(|e| {
+        panic!("No se pudo leer el archivo '{}': {}", path, e);
+    });
 
     let grammar = Grammar::from_string(&input);
 
