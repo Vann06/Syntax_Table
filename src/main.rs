@@ -1,36 +1,64 @@
 mod grammar;
 mod first_follow;
 
-use std::collections::{HashMap, HashSet};
 use std::fs;
 
 use grammar::Grammar;
-use first_follow::first_of_sequence;
+use first_follow::{compute_first_sets, compute_follow_sets};
 
 fn main() {
-    let input = fs::read_to_string("gramatica.txt")
+    let input = fs::read_to_string("./ejemplos/ej1.txt")
         .expect("No se pudo leer el archivo");
 
     let grammar = Grammar::from_string(&input);
 
-    println!("No terminales: {:?}", grammar.non_terminals);
+    // Mostrar la gramática
+    println!("═══════════════════════════════════════");
+    println!("          GRAMÁTICA");
+    println!("═══════════════════════════════════════");
+    println!("Símbolo inicial: {}", grammar.start_symbol);
+    println!("\nNo terminales: {:?}", grammar.non_terminals);
     println!("Terminales: {:?}", grammar.terminals);
+    println!("\nProducciones:");
+    for production in &grammar.productions {
+        println!("  {} -> {}", production.lhs, production.rhs.join(" "));
+    }
 
-    let mut first_sets: HashMap<String, HashSet<String>> = HashMap::new();
+    // Calcular FIRST
+    println!("\n═══════════════════════════════════════");
+    println!("        CONJUNTOS FIRST");
+    println!("═══════════════════════════════════════");
+    let first_sets = compute_first_sets(&grammar);
 
-    // Simulación manual para probar first_of_sequence
-    first_sets.insert(
-        "A".to_string(),
-        ["a".to_string(), "ε".to_string()].into_iter().collect(),
-    );
+    // Mostrar FIRST ordenado por no-terminal
+    let mut sorted_nonterminals: Vec<_> = grammar.non_terminals.iter().collect();
+    sorted_nonterminals.sort();
 
-    first_sets.insert(
-        "B".to_string(),
-        ["b".to_string()].into_iter().collect(),
-    );
+    for nt in sorted_nonterminals {
+        if let Some(first_set) = first_sets.get(nt) {
+            let mut sorted_set: Vec<String> = first_set.iter().map(|s| s.clone()).collect();
+            sorted_set.sort();
+            println!("FIRST({}) = {{ {} }}", nt, sorted_set.join(", "));
+        }
+    }
 
-    let seq = vec!["A".to_string(), "B".to_string()];
-    let result = first_of_sequence(&seq, &grammar, &first_sets);
+    // Calcular FOLLOW
+    println!("\n═══════════════════════════════════════");
+    println!("       CONJUNTOS FOLLOW");
+    println!("═══════════════════════════════════════");
+    let follow_sets = compute_follow_sets(&grammar, &first_sets);
 
-    println!("FIRST({:?}) = {:?}", seq, result);
+    // Mostrar FOLLOW ordenado por no-terminal
+    let mut sorted_nonterminals: Vec<_> = grammar.non_terminals.iter().collect();
+    sorted_nonterminals.sort();
+
+    for nt in sorted_nonterminals {
+        if let Some(follow_set) = follow_sets.get(nt) {
+            let mut sorted_set: Vec<String> = follow_set.iter().map(|s| s.clone()).collect();
+            sorted_set.sort();
+            println!("FOLLOW({}) = {{ {} }}", nt, sorted_set.join(", "));
+        }
+    }
+
+    println!("\n═══════════════════════════════════════");
 }
