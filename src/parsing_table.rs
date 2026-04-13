@@ -65,7 +65,7 @@ pub fn find_conflicts(table: &ParsingTable) -> Vec<((Symbol, Symbol), Vec<Produc
 }
 
 fn rhs_text(p: &Production) -> String {
-    if p.rhs.len() == 1 && p.rhs[0] == "ε" {
+    if p.rhs.is_empty() || (p.rhs.len() == 1 && p.rhs[0] == "ε") {
         "ε".to_string()
     } else {
         p.rhs.join(" ")

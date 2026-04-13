@@ -1,0 +1,20 @@
+# Mini-lenguaje (LL(1)) con bloques, if/else (con 'fi'), while y expresiones con precedencia
+Program -> StmtList
+
+StmtList -> Stmt StmtList | ε
+
+Stmt -> id = Expr ;
+Stmt -> print ( Expr ) ;
+Stmt -> if ( Expr ) Stmt IfTail
+Stmt -> while ( Expr ) Stmt
+Stmt -> { StmtList }
+
+IfTail -> else Stmt fi | fi
+
+Expr -> Term ExprTail
+ExprTail -> + Term ExprTail | - Term ExprTail | ε
+
+Term -> Factor TermTail
+TermTail -> * Factor TermTail | / Factor TermTail | ε
+
+Factor -> ( Expr ) | id | num
