@@ -1,11 +1,13 @@
 mod grammar;
 mod first_follow;
+mod parsing_table;
 
 use std::fs;
 use std::io::{self, Write};
 
 use grammar::Grammar;
 use first_follow::{compute_first_sets, compute_follow_sets};
+use parsing_table::{build_parsing_table, find_conflicts, is_ll1, print_parsing_table};
 
 fn main() {
     let default_path = "./ejemplos/ej1.txt";
@@ -79,6 +81,30 @@ fn main() {
             println!("FOLLOW({}) = {{ {} }}", nt, sorted_set.join(", "));
         }
     }
+
+    // Tabla predictiva LL(1)
+    println!("\n═══════════════════════════════════════");
+    println!("      TABLA PREDICTIVA LL(1)");
+    println!("═══════════════════════════════════════");
+
+    let table = build_parsing_table(&grammar, &first_sets, &follow_sets);
+    println!("¿Es LL(1)? {}", if is_ll1(&table) { "Sí" } else { "No" });
+
+    let conflicts = find_conflicts(&table);
+    if conflicts.is_empty() {
+        println!("Conflictos: ninguno");
+    } else {
+        println!("Conflictos detectados (celdas con más de una producción):");
+        for ((nt, term), prods) in conflicts {
+            println!("  Conflicto en [{}, {}]:", nt, term);
+            for p in prods {
+                println!("    {} -> {}", p.lhs, if p.rhs.is_empty() { "ε".to_string() } else { p.rhs.join(" ") });
+            }
+        }
+    }
+
+    println!("\nTabla predictiva:");
+    print_parsing_table(&grammar, &table);
 
     println!("\n═══════════════════════════════════════");
 }
