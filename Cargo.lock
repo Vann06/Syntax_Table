@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "SYNTAX_TABLE"
+name = "closure_lr0"
 version = "0.1.0"

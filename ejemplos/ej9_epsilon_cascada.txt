@@ -1,4 +1,0 @@
-# Stress test: cascada de epsilons + FOLLOW que debe propagarse bien (LL(1))
-S -> A B c
-A -> ε | a
-B -> ε | b

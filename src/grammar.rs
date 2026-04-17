@@ -14,14 +14,93 @@ pub struct Production {
 pub struct Grammar {
     pub start_symbol: Symbol,
     pub non_terminals: HashSet<Symbol>,
+    #[allow(dead_code)]
     pub terminals: HashSet<Symbol>,
     pub productions: Vec<Production>,
 }
 
 impl Grammar {
     #[allow(dead_code)]
+    pub fn new(start_symbol: &str) -> Self {
+        let mut non_terminals = HashSet::new();
+        non_terminals.insert(start_symbol.trim().to_string());
+
+        Self {
+            start_symbol: start_symbol.trim().to_string(),
+            non_terminals,
+            terminals: HashSet::new(),
+            productions: Vec::new(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn add_production(&mut self, lhs: &str, rhs: Vec<Symbol>) {
+        let lhs = lhs.trim();
+        if lhs.is_empty() {
+            return;
+        }
+
+        self.productions.push(Production {
+            lhs: lhs.to_string(),
+            rhs,
+        });
+
+        // Keep symbol sets consistent even if productions are added incrementally.
+        self.recompute_symbols();
+    }
+
+    #[allow(dead_code)]
+    fn recompute_symbols(&mut self) {
+        let mut non_terminals = HashSet::new();
+        for production in &self.productions {
+            non_terminals.insert(production.lhs.clone());
+        }
+
+        let mut terminals = HashSet::new();
+        for production in &self.productions {
+            for symbol in &production.rhs {
+                if !non_terminals.contains(symbol) {
+                    terminals.insert(symbol.clone());
+                }
+            }
+        }
+
+        self.non_terminals = non_terminals;
+        self.terminals = terminals;
+    }
+
+    #[allow(dead_code)]
     pub fn from_string(input: &str) -> Self {
         Self::try_from_string(input).expect("Gramática inválida")
+    }
+
+    pub fn get_productions_for(&self, lhs: &str) -> Vec<&Production> {
+        self.productions
+            .iter()
+            .filter(|p| p.lhs == lhs)
+            .collect()
+    }
+
+    pub fn is_nonterminal(&self, symbol: &str) -> bool {
+        self.non_terminals.contains(symbol)
+    }
+
+    pub fn augmented(&self) -> Self {
+        let mut new_grammar = self.clone();
+        let augmented_start = format!("{}'", self.start_symbol);
+
+        new_grammar.non_terminals.insert(augmented_start.clone());
+
+        new_grammar.productions.insert(
+            0,
+            Production {
+                lhs: augmented_start.clone(),
+                rhs: vec![self.start_symbol.clone()],
+            },
+        );
+
+        new_grammar.start_symbol = augmented_start;
+        new_grammar
     }
 
     pub fn try_from_string(input: &str) -> Result<Self, GrammarError> {
@@ -131,6 +210,28 @@ impl Grammar {
             terminals,
             productions,
         })
+    }
+}
+
+impl fmt::Display for Production {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.rhs.is_empty() {
+            write!(f, "{} -> ε", self.lhs)
+        } else {
+            write!(f, "{} -> {}", self.lhs, self.rhs.join(" "))
+        }
+    }
+}
+
+impl fmt::Display for Grammar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, p) in self.productions.iter().enumerate() {
+            if i > 0 {
+                writeln!(f)?;
+            }
+            write!(f, "{}", p)?;
+        }
+        Ok(())
     }
 }
 
